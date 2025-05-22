@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orchid Instrument - Robust V4</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&family=Playfair+Display:wght@700&family=Roboto:wght@300;400;700&display=swap');
+
+        body { /* ... (same styles) ... */
+            font-family: 'Roboto', sans-serif; background-color: #1a1a1a; color: #e0e0e0; margin: 0; padding: 20px 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow-x: hidden;
+        }
+        #user-instruction { /* ... (same styles) ... */
+            font-family: 'Roboto Mono', monospace; font-size: 1em; margin-bottom: 15px; color: #bbb; cursor: pointer;
+        }
+        #orchid-instrument { /* ... (same styles) ... */
+            background-color: #2D2D2D; border: 1px solid #111; border-radius: 10px; padding: 15px; display: flex;
+            flex-direction: column; align-items: center; box-shadow: 0px 5px 15px rgba(0,0,0,0.4), inset 0 0 5px rgba(0,0,0,0.2);
+            width: 740px; position: relative;
+        }
+        .instrument-brand-top-left { /* ... (same styles) ... */
+            position: absolute; top: 10px; left: 20px; font-family: 'Roboto', sans-serif; font-size: 0.7em; color: #999; letter-spacing: 0.5px;
+        }
+        .instrument-brand-top-left::before { /* ... (same styles) ... */
+            content: ''; display: inline-block; width: 5px; height: 10px; border-left: 1.5px solid #999; border-right: 1.5px solid #999; margin-right: 4px; position: relative; top: 1px;
+        }
+        .instrument-brand-top-left::after { /* ... (same styles) ... */
+            content: ''; position: absolute; width: 1.5px; height: 10px; background-color: #999; left: 2.2px; top: 0px;
+        }
+        .instrument-brand-right { /* ... (same styles) ... */
+            position: absolute; top: 50%; right: -25px; transform: translateY(-50%) rotate(180deg); font-family: 'Playfair Display', serif; font-size: 1.8em; color: #B0B0B0; writing-mode: vertical-rl; text-orientation: mixed; letter-spacing: 1px;
+        }
+        .top-knob-row { /* ... (same styles) ... */
+            display: flex; justify-content: space-between; width: calc(100% - 40px); margin: 10px 20px 15px 20px; padding-bottom: 10px; border-bottom: 1px solid #404040;
+        }
+        .knob-group { /* ... (same styles) ... */ display: flex; gap: 8px; }
+        .knob { /* ... (same styles) ... */
+            display: flex; flex-direction: column; align-items: center; font-size: 0.55em; color: #A0A0A0; text-transform: uppercase; letter-spacing: 0.5px; width: 50px; text-align: center;
+        }
+        .knob input[type="range"] { /* ... (same styles) ... */
+            -webkit-appearance: none; appearance: none; width: 28px; height: 28px; background: #383838; border-radius: 50%; border: 1px solid #202020; cursor: pointer; margin-bottom: 2px; padding: 0; box-shadow: inset 0 0 3px rgba(0,0,0,0.3); position: relative;
+        }
+        .knob input[type="range"]::-webkit-slider-thumb { /* ... (same styles) ... */
+            -webkit-appearance: none; appearance: none; width: 9px; height: 9px; background: #999; border-radius: 50%; cursor: pointer; margin-top: -3.5px; box-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+        .knob input[type="range"]::-moz-range-thumb { /* ... (same styles) ... */
+            width: 9px; height: 9px; background: #999; border-radius: 50%; cursor: pointer; border: none; box-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+        .central-display { /* ... (same styles) ... */
+            width: 100%; display: flex; flex-direction: column; align-items: center; margin-bottom: 15px; min-height: 70px;
+        }
+        #chord-name-output { /* ... (same styles) ... */
+            font-family: 'Playfair Display', serif; font-size: 2.8em; color: #FFFFFF; margin-bottom: 8px; letter-spacing: 1px; min-height: 1.2em;
+        }
+        #note-visualizer { /* ... (same styles) ... */
+            display: flex; height: 15px; background-color: #222; padding: 3px; border-radius: 3px; border: 1px solid #181818;
+        }
+        .visualizer-note-segment { /* ... (same styles) ... */
+            width: 10px; height: 100%; margin: 0 1px; background-color: #404040; border-radius: 1px;
+        }
+        .visualizer-note-segment.active { /* ... (same styles) ... */
+            background-color: #FF6B6B; box-shadow: 0 0 5px #FF6B6B;
+        }
+        .interaction-area { /* ... (same styles) ... */
+            display: flex; width: 100%; justify-content: space-between; padding: 0 10px; gap: 15px; align-items: flex-start;
+        }
+        .left-panel { /* ... (same styles) ... */ display: flex; flex-direction: column; align-items: center; }
+        .chord-modifier-buttons { /* ... (same styles) ... */
+            display: grid; grid-template-columns: repeat(4, 50px); grid-template-rows: repeat(2, 35px); gap: 6px; margin-bottom: 10px;
+        }
+        .chord-mod-btn { /* ... (same styles) ... */
+            background-color: #484848; color: #C0C0C0; border: 1px solid #252525; border-radius: 4px; font-size: 0.8em; font-weight: 500; cursor: pointer; transition: background-color 0.1s, box-shadow 0.1s; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+        .chord-mod-btn:hover { /* ... (same styles) ... */ background-color: #555555; }
+        .chord-mod-btn.active { /* ... (same styles) ... */
+            background-color: #FF6B6B; color: #FFFFFF; box-shadow: 0 0 8px #FF6B6B, inset 0 0 3px rgba(255,255,255,0.2);
+        }
+        .large-knob-control { /* ... (same styles) ... */
+             display: flex; flex-direction: column; align-items: center; margin-top: 5px; 
+        }
+        .large-knob-label { /* ... (same styles) ... */ font-size: 0.6em; color: #888; text-transform: uppercase; margin-bottom: 1px; }
+        #knob-voicing { /* ... (same styles) ... */
+             -webkit-appearance: none; appearance: none; width: 55px; height: 55px; background: #383838; border-radius: 50%; border: 1px solid #202020; cursor: pointer; margin-bottom: 2px; padding: 0; box-shadow: inset 0 0 4px rgba(0,0,0,0.4); position: relative;
+        }
+         #knob-voicing::-webkit-slider-thumb { /* ... (same styles) ... */
+            -webkit-appearance: none; appearance: none; width: 18px; height: 18px; background: #999; border-radius: 50%; cursor: pointer; margin-top: -8px;
+        }
+        #knob-voicing::-moz-range-thumb { /* ... (same styles) ... */
+            width: 18px; height: 18px; background: #999; border-radius: 50%; cursor: pointer; border: none;
+        }
+        .bass-button-container { /* ... (same styles) ... */ display: flex; flex-direction: column; align-items: center; margin-top: 8px; }
+        #bass-toggle-btn { /* ... (same styles) ... */
+            width: 22px; height: 22px; background-color: #484848; border: 1px solid #252525; border-radius: 50%; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.3); transition: background-color 0.1s, box-shadow 0.1s;
+        }
+        #bass-toggle-btn.active { /* ... (same styles) ... */
+            background-color: #FF6B6B; box-shadow: 0 0 6px #FF6B6B, inset 0 0 3px rgba(255,255,255,0.2);
+        }
+        .bass-button-label { /* ... (same styles) ... */ font-size: 0.6em; color: #888; text-transform: uppercase; margin-top: 3px; }
+        .keyboard-area-container { /* ... (same styles) ... */ display: flex; flex-direction: column; align-items: center; }
+        #keyboard { /* ... (same styles) ... */
+            display: flex; position: relative; background-color: #1C1C1C; padding: 8px; border-radius: 5px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.4); height: 100px; align-items: flex-start; width: 450px;
+        }
+        .key { /* ... (same styles) ... */
+            border: 1px solid #151515; border-radius: 0 0 4px 4px; box-sizing: border-box; cursor: pointer; user-select: none; transition: background-color 0.05s;
+        }
+        .key.white { /* ... (same styles) ... */
+            width: 28px; height: 90px; background-color: #E8E8E8; margin-right: 1px; box-shadow: 0px 2px 1px rgba(0,0,0,0.2);
+        }
+        .key.white:hover { /* ... (same styles) ... */ background-color: #D8D8D8; }
+        .key.white.active { /* ... (same styles) ... */
+            background-color: #FF8C8C; box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        }
+        .key.black { /* ... (same styles) ... */
+            width: 17px; height: 55px; background-color: #303030; color: #f0f0f0; position: absolute; z-index: 1; box-shadow: 0px 2px 1px rgba(0,0,0,0.4);
+        }
+        .key.black:hover { /* ... (same styles) ... */ background-color: #404040; }
+        .key.black.active { /* ... (same styles) ... */
+            background-color: #D15050; box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+        }
+        .octave-controls { /* ... (same styles) ... */ display: flex; gap: 10px; margin-top: 10px; }
+        .octave-btn { /* ... (same styles) ... */
+            background-color: #484848; color: #C0C0C0; border: 1px solid #252525; border-radius: 4px; font-size: 0.8em; padding: 5px 10px; cursor: pointer; user-select: none;
+        }
+        .octave-btn:hover { /* ... (same styles) ... */ background-color: #5A5A5A; }
+        #octave-display { /* ... (same styles) ... */
+            color: #C0C0C0; font-size: 0.9em; padding: 5px; min-width: 20px; text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="user-instruction">Click here to enable audio. Then, click keys and buttons to play.</div>
+
+    <div id="orchid-instrument">
+        <div class="instrument-brand-top-left">Telepathic Instruments</div>
+        <div class="instrument-brand-right">Orchid</div>
+        <div class="top-knob-row">
+            <div class="knob-group">
+                <div class="knob"><input type="range" id="knob-sound" min="0" max="3" value="0" step="1" title="Sound (Osc Type)"><label for="knob-sound">Sound</label></div>
+                <div class="knob"><input type="range" id="knob-perform" min="50" max="3000" value="400" step="50" title="Env Release / LFO Depth"><label for="knob-perform">Perform</label></div>
+                <div class="knob"><input type="range" id="knob-fx" min="0" max="100" value="0" step="1" title="FX (Reverb Mix)"><label for="knob-fx">Fx</label></div>
+                <div class="knob"><input type="range" id="knob-key-transpose" min="-12" max="12" value="0" step="1" title="Key (Transpose)"><label for="knob-key-transpose">Key</label></div>
+            </div>
+            <div class="knob-group">
+                <div class="knob"><input type="range" id="knob-bass-vol" min="0" max="100" value="0" step="1" title="Bass (Sub Osc Vol)"><label for="knob-bass-vol">Bass Vol</label></div>
+                <div class="knob"><input type="range" id="knob-loop" min="0" max="3" value="0" step="1" title="Arp: Off,Up,Down,UpDown"><label for="knob-loop">Loop/Arp</label></div>
+                <div class="knob"><input type="range" id="knob-bpm" min="40" max="240" value="120" step="1" title="BPM (Arp Tempo)"><label for="knob-bpm">BPM</label></div>
+                <div class="knob"><input type="range" id="knob-lfo-target" min="0" max="3" value="0" step="1" title="LFO: Off,Pitch,Filter,Amp"><label for="knob-lfo-target">LFO Target</label></div> <!-- Renamed from Options -->
+            </div>
+            <div class="knob"><input type="range" id="knob-volume" min="0" max="100" value="75" step="1" title="Volume"><label for="knob-volume">Volume</label></div>
+        </div>
+        <div class="central-display">
+            <div id="chord-name-output">---</div>
+            <div id="note-visualizer"></div>
+        </div>
+        <div class="interaction-area">
+            <div class="left-panel">
+                <div class="chord-modifier-buttons">
+                    <button class="chord-mod-btn" data-type="Dim">Dim</button>
+                    <button class="chord-mod-btn" data-type="Min">Min</button>
+                    <button class="chord-mod-btn active" data-type="Maj">Maj</button>
+                    <button class="chord-mod-btn" data-type="Sus">Sus</button>
+                    <button class="chord-mod-btn" data-type="6">6</button>
+                    <button class="chord-mod-btn" data-type="m7">m⁷</button>
+                    <button class="chord-mod-btn" data-type="M7">M⁷</button>
+                    <button class="chord-mod-btn" data-type="9">9</button>
+                </div>
+                <div class="large-knob-control">
+                    <label for="knob-voicing" class="large-knob-label">Voicing/LFO Rate</label>
+                    <input type="range" id="knob-voicing" min="0" max="2" value="0" step="1" title="Chord Inversion or LFO Rate">
+                    <div class="bass-button-container">
+                        <button id="bass-toggle-btn"></button>
+                        <div class="bass-button-label">Bass</div>
+                    </div>
+                </div>
+            </div>
+            <div class="keyboard-area-container">
+                <div id="keyboard"></div>
+                <div class="octave-controls">
+                    <button class="octave-btn" id="octave-down" title="Octave Down">-</button>
+                    <span id="octave-display">0</span>
+                    <button class="octave-btn" id="octave-up" title="Octave Up">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const NOTE_NAMES_SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+            const NOTE_NAMES_FLAT =  ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];
+            const OSC_TYPES = ['fatsawtooth', 'sine', 'square', 'triangle'];
+            const ARP_PATTERNS = ['off', 'up', 'down', 'upDown'];
+            const LFO_TARGETS = ['off', 'pitch', 'filterFreq', 'amplitude']; // Renamed from MOD_TYPES
+            const VOICING_INVERSIONS = ['root', 'firstInv', 'secondInv'];
+
+            const KEYBOARD_MAP = [ 
+                { midi: 48, name: 'C', type: 'white' }, { midi: 49, name: 'C#', type: 'black' },
+                { midi: 50, name: 'D', type: 'white' }, { midi: 51, name: 'D#', type: 'black' },
+                { midi: 52, name: 'E', type: 'white' }, { midi: 53, name: 'F', type: 'white' },
+                { midi: 54, name: 'F#', type: 'black' }, { midi: 55, name: 'G', type: 'white' },
+                { midi: 56, name: 'G#', type: 'black' }, { midi: 57, name: 'A', type: 'white' },
+                { midi: 58, name: 'A#', type: 'black' }, { midi: 59, name: 'B', type: 'white' },
+                { midi: 60, name: 'C', type: 'white' }, { midi: 61, name: 'C#', type: 'black' },
+                { midi: 62, name: 'D', type: 'white' }, { midi: 63, name: 'D#', type: 'black' },
+                { midi: 64, name: 'E', type: 'white' }
+            ];
+            const NUM_VISUALIZER_SEGMENTS = 12;
+
+            let synth, reverb, subOsc, filter, lfo, arp, masterGain;
+            let currentRootNoteMidi = null;
+            let currentRootNoteName = '';
+            let keyboardOctaveOffset = 0;
+            let currentKeyTranspose = 0;
+            let selectedTriadQuality = 'Maj';
+            const selectedExtensions = { '6': false, 'm7': false, 'M7': false, '9': false };
+            let addBassNoteActive = false;
+            let activeSynthNotes = []; 
+            let currentArpNotes = []; 
+            let isPlaying = false; 
+            let audioInitialized = false;
+
+            const ui = {
+                instruction: document.getElementById('user-instruction'),
+                chordName: document.getElementById('chord-name-output'),
+                noteVisualizer: document.getElementById('note-visualizer'),
+                keyboard: document.getElementById('keyboard'),
+                chordModifiers: document.querySelectorAll('.chord-mod-btn'),
+                bassToggle: document.getElementById('bass-toggle-btn'),
+                octaveDown: document.getElementById('octave-down'),
+                octaveUp: document.getElementById('octave-up'),
+                octaveDisplay: document.getElementById('octave-display'),
+                knobs: {
+                    sound: document.getElementById('knob-sound'),
+                    perform: document.getElementById('knob-perform'), // Env Release / LFO Depth
+                    fx: document.getElementById('knob-fx'),
+                    keyTranspose: document.getElementById('knob-key-transpose'),
+                    bassVol: document.getElementById('knob-bass-vol'),
+                    loop: document.getElementById('knob-loop'),
+                    bpm: document.getElementById('knob-bpm'),
+                    lfoTarget: document.getElementById('knob-lfo-target'), // Renamed from options
+                    voicing: document.getElementById('knob-voicing'),     // Chord Inversion / LFO Rate
+                    volume: document.getElementById('knob-volume'),
+                }
+            };
+            let allElementsExist = Object.values(ui).every(el => el) && ui.chordModifiers.length === 8 && Object.values(ui.knobs).every(k => k);
+            if (!allElementsExist) { console.error("Essential UI element not found."); if(ui.instruction) ui.instruction.textContent = "Error: UI elements missing."; return; }
+            
+            ui.instruction.addEventListener('click', initializeAudioAndSynth);
+
+            async function initializeAudioAndSynth() {
+                if (audioInitialized) { if (!synth) createSynthAndEffects(); return; }
+                try { await Tone.start(); audioInitialized = true; createSynthAndEffects(); if (ui.instruction) ui.instruction.textContent = "Audio Initialized."; } catch (e) { console.error("Error Tone.start:", e); if (ui.instruction) ui.instruction.textContent = "Audio Error."; }
+            }
+
+            function createSynthAndEffects() {
+                [synth, reverb, subOsc, filter, lfo, arp, masterGain].forEach(node => node && node.dispose());
+                masterGain = new Tone.Gain(0.75).toDestination();
+                reverb = new Tone.Reverb({ decay: 1.5, wet: 0 }).connect(masterGain);
+                filter = new Tone.Filter(20000, "lowpass").connect(reverb);
+                synth = new Tone.PolySynth(Tone.Synth).connect(filter);
+                subOsc = new Tone.Oscillator({ type: 'sine', frequency: 220, volume: -Infinity }).connect(filter);
+                subOsc.start();
+                lfo = new Tone.LFO({frequency: getLfoRateFromVoicingKnob(), min: 0, max: 1, amplitude: 0}).start();
+                arp = new Tone.Pattern((time, note) => {
+                    synth.triggerAttackRelease(note, "8n", time);
+                }, [], ARP_PATTERNS[parseInt(ui.knobs.loop.value)] || "up");
+                arp.interval = "8n";
+                applyAllKnobSettings();
+            }
+
+            function applyAllKnobSettings(){
+                applyOscillatorType(); applyEnvelopeRelease(); applyMasterGainSetting(); applyReverbMix();
+                applySubOscVolume(); applyBPM(); applyLfoTargetAndSettings(); // Consolidated LFO setup
+            }
+
+            function getEffectiveRootMidi() { return currentRootNoteMidi === null ? null : currentRootNoteMidi + keyboardOctaveOffset + currentKeyTranspose; }
+            
+            function applyVoicingToNotes(notes) { // Renamed for clarity
+                if (!notes || notes.length < 3) return notes;
+                const voicingIndex = parseInt(ui.knobs.voicing.value);
+                const lfoIsActive = LFO_TARGETS[parseInt(ui.knobs.lfoTarget.value)] !== 'off';
+                if (lfoIsActive) return notes; // Voicing knob controls LFO rate, not chord voicing
+
+                const voicingType = VOICING_INVERSIONS[voicingIndex];
+                let voicedNotes = [...notes];
+                switch (voicingType) {
+                    case 'firstInv': voicedNotes[0] += 12; voicedNotes.sort((a, b) => a - b); break;
+                    case 'secondInv': voicedNotes[0] += 12; if (voicedNotes.length > 1) voicedNotes[1] += 12; voicedNotes.sort((a, b) => a - b); break;
+                }
+                return voicedNotes;
+            }
+
+            function buildChordNotesMidi() {
+                const effectiveRoot = getEffectiveRootMidi(); if (effectiveRoot === null) return [];
+                let notes = []; let baseTriadMidi = [];
+                switch (selectedTriadQuality) { case 'Maj': baseTriadMidi = [0, 4, 7]; break; case 'Min': baseTriadMidi = [0, 3, 7]; break; case 'Dim': baseTriadMidi = [0, 3, 6]; break; case 'Sus': baseTriadMidi = [0, 5, 7]; break; }
+                notes.push(...baseTriadMidi.map(interval => effectiveRoot + interval));
+                if (selectedExtensions['6']) notes.push(effectiveRoot + 9); if (selectedExtensions['m7']) notes.push(effectiveRoot + 10); if (selectedExtensions['M7']) notes.push(effectiveRoot + 11); if (selectedExtensions['9']) notes.push(effectiveRoot + 14);
+                let finalNotes = [...new Set(notes)].sort((a, b) => a - b);
+                finalNotes = applyVoicingToNotes(finalNotes);
+                if (addBassNoteActive && ARP_PATTERNS[parseInt(ui.knobs.loop.value)] === 'off') { finalNotes.unshift(effectiveRoot - 12); finalNotes = [...new Set(finalNotes)].sort((a,b) => a-b); }
+                return finalNotes;
+            }
+            
+            function midiToNoteNameWithOctave(midiNote) { return NOTE_NAMES_SHARP[midiNote % 12] + (Math.floor(midiNote / 12) - 1); }
+            function getRootDisplayNameForOutput(rootMidi) { return rootMidi === null ? (currentRootNoteName || '') : (NOTE_NAMES_FLAT[rootMidi % 12].includes('♭') ? NOTE_NAMES_FLAT[rootMidi % 12] : NOTE_NAMES_SHARP[rootMidi % 12]); }
+            function getChordDisplayNameText() { /* ... (same) ... */  if (currentRootNoteMidi === null) return "---"; const e = getEffectiveRootMidi(); let n = getRootDisplayNameForOutput(e); let q = "", x = ""; if (selectedTriadQuality === 'Min') q = 'm'; else if (selectedTriadQuality === 'Dim') q = 'dim'; else if (selectedTriadQuality === 'Sus') q = 'sus'; if (selectedExtensions['M7']) x += 'M7'; else if (selectedExtensions['m7']) x += '7'; if (selectedExtensions['9']) { if (x === 'M7') x = 'maj9'; else if (x === '7') x = '9'; else if (!x && selectedTriadQuality === 'Maj') x = 'add9'; else x = (q && !x ? '' : x) + '9';} if (selectedExtensions['6']) { if (!x.includes('7') && !x.includes('9')) x += '6';} if (selectedTriadQuality === 'Maj' && (x.startsWith('M') || x.startsWith('maj') || x.startsWith('add') || x.match(/^[0-9]/) )) n += x; else n += q + x; if (n === getRootDisplayNameForOutput(e) && selectedTriadQuality === 'Maj' && Object.values(selectedExtensions).every(v => !v)) {} else if (n === getRootDisplayNameForOutput(e) + "m" && selectedTriadQuality === 'Min' && Object.values(selectedExtensions).every(v => !v)){} return n; }
+            function updateVisuals() { /* ... (same) ... */ ui.chordName.textContent = getChordDisplayNameText(); const c = buildChordNotesMidi(); const nc = new Array(NUM_VISUALIZER_SEGMENTS).fill(false); c.forEach(m => { nc[m % 12] = true; }); ui.noteVisualizer.childNodes.forEach((s, i) => s.classList.toggle('active', nc[i])); ui.chordModifiers.forEach(b => { const t = b.dataset.type; const iT = ['Dim', 'Min', 'Maj', 'Sus'].includes(t); if (iT) b.classList.toggle('active', selectedTriadQuality === t); else b.classList.toggle('active', !!selectedExtensions[t]); }); ui.bassToggle.classList.toggle('active', addBassNoteActive); document.querySelectorAll('#keyboard .key.active').forEach(k => k.classList.remove('active')); if (currentRootNoteMidi !== null && isPlaying) { const aK = Array.from(ui.keyboard.children).find(k => parseInt(k.dataset.midi) === currentRootNoteMidi); if (aK) aK.classList.add('active'); } ui.octaveDisplay.textContent = keyboardOctaveOffset / 12; }
+
+            async function handlePlayTrigger() {
+                await initializeAudioAndSynth();
+                if (!synth || !audioInitialized || currentRootNoteMidi === null) {
+                    releaseCurrentSound(true); updateVisuals(); return;
+                }
+                releaseCurrentSound(false); 
+                
+                const currentArpPattern = ARP_PATTERNS[parseInt(ui.knobs.loop.value)];
+                currentArpNotes = buildChordNotesMidi().map(note => midiToNoteNameWithOctave(note));
+
+                if (currentArpPattern !== 'off' && currentArpNotes.length > 0) {
+                    arp.values = currentArpNotes; arp.pattern = currentArpPattern;
+                    if (Tone.Transport.state !== "started") Tone.Transport.start();
+                    arp.start(0); isPlaying = true;
+                } else if (currentArpNotes.length > 0) {
+                    activeSynthNotes = currentArpNotes; synth.triggerAttack(activeSynthNotes, Tone.now()); isPlaying = true;
+                } else { isPlaying = false; }
+
+                // Sub Oscillator - Ensure it's only active IF its knob is up
+                if (subOsc && parseFloat(ui.knobs.bassVol.value) > 0 && getEffectiveRootMidi() !== null) {
+                    applySubOscVolume(); // This will set freq and volume
+                } else if (subOsc) {
+                    subOsc.volume.linearRampToValueAtTime(-Infinity, Tone.now() + 0.05);
+                }
+                updateVisuals();
+            }
+
+            function releaseCurrentSound(clearRootAndStopTransport = true) {
+                if (arp && arp.state === "started") { arp.stop(0); arp.cancel(); arp.values = []; } // Clear values too
+                if (synth && activeSynthNotes.length > 0) { synth.releaseAll(Tone.now()); activeSynthNotes = []; }
+                if (subOsc) { subOsc.volume.linearRampToValueAtTime(-Infinity, Tone.now() + 0.05); } // Always silence sub on release
+                
+                isPlaying = false;
+                if (clearRootAndStopTransport) { 
+                    currentRootNoteMidi = null; currentRootNoteName = '';
+                    // Only stop transport if arp was the *only* thing using it and is now off.
+                    // For simplicity, often better to leave transport running once started.
+                    // if (Tone.Transport.state === "started" && ARP_PATTERNS[parseInt(ui.knobs.loop.value)] === 'off') {
+                    //     Tone.Transport.stop().cancel(); // Also cancel transport events
+                    // }
+                }
+                updateVisuals();
+            }
+
+            function createVisualKeyboard() { /* ... (same key press logic) ... */
+                 let whiteKeyOffsetPx = 0; const whiteKeyWidth = 28; const whiteKeyMargin = 1; const blackKeyWidth = 17;
+                KEYBOARD_MAP.forEach(keyInfo => {
+                    const keyEl = document.createElement('div'); keyEl.classList.add('key', keyInfo.type); keyEl.dataset.midi = keyInfo.midi; keyEl.dataset.noteName = keyInfo.name;
+                    if (keyInfo.type === 'white') { keyEl.style.left = `${whiteKeyOffsetPx}px`; whiteKeyOffsetPx += whiteKeyWidth + whiteKeyMargin; } else { keyEl.style.left = `${whiteKeyOffsetPx - (whiteKeyWidth + whiteKeyMargin) + whiteKeyWidth - (blackKeyWidth/2) + (whiteKeyMargin/2)}px`; }
+                    keyEl.addEventListener('mousedown', async () => {
+                        const newRootMidi = parseInt(keyEl.dataset.midi);
+                        if (isPlaying && newRootMidi === currentRootNoteMidi) { releaseCurrentSound(true); } 
+                        else { currentRootNoteMidi = newRootMidi; currentRootNoteName = keyEl.dataset.noteName; handlePlayTrigger(); }
+                    });
+                    ui.keyboard.appendChild(keyEl);
+                });
+            }
+            function createNoteVisualizer() { /* ... (same) ... */ ui.noteVisualizer.innerHTML = ''; for (let i = 0; i < NUM_VISUALIZER_SEGMENTS; i++) { const segment = document.createElement('div'); segment.classList.add('visualizer-note-segment'); ui.noteVisualizer.appendChild(segment); } }
+            ui.chordModifiers.forEach(button => button.addEventListener('click', async () => { const type = button.dataset.type; const isTriad = ['Dim', 'Min', 'Maj', 'Sus'].includes(type); if (isTriad) selectedTriadQuality = type; else selectedExtensions[type] = !selectedExtensions[type]; if (isPlaying) handlePlayTrigger(); else updateVisuals(); }));
+            ui.bassToggle.addEventListener('click', async () => { addBassNoteActive = !addBassNoteActive; if (isPlaying && ARP_PATTERNS[parseInt(ui.knobs.loop.value)] === 'off') handlePlayTrigger(); else updateVisuals(); });
+            ui.octaveDown.addEventListener('click', () => { keyboardOctaveOffset -= 12; if (keyboardOctaveOffset < -24) keyboardOctaveOffset = -24; if (isPlaying) handlePlayTrigger(); else updateVisuals(); });
+            ui.octaveUp.addEventListener('click', () => { keyboardOctaveOffset += 12; if (keyboardOctaveOffset > 24) keyboardOctaveOffset = 24; if (isPlaying) handlePlayTrigger(); else updateVisuals(); });
+
+            // --- Knob Apply Functions & Listeners ---
+            function applyOscillatorType() { if (synth) synth.set({ oscillator: { type: OSC_TYPES[parseInt(ui.knobs.sound.value)] || 'fatsawtooth' } }); }
+            ui.knobs.sound.addEventListener('input', applyOscillatorType);
+            
+            function applyEnvelopeRelease() { 
+                if (synth) synth.set({ envelope: { release: (parseFloat(ui.knobs.perform.value) / 1000 || 0.4) } }); 
+                // If LFO is active, "Perform" knob also controls LFO depth
+                const lfoTarget = LFO_TARGETS[parseInt(ui.knobs.lfoTarget.value)];
+                if (lfoTarget !== 'off' && lfo) {
+                    // Map perform knob (50-3000) to LFO amplitude (0-1)
+                    const performValue = parseFloat(ui.knobs.perform.value);
+                    const minPerf = 50, maxPerf = 3000;
+                    let lfoDepth = (performValue - minPerf) / (maxPerf - minPerf);
+                    lfoDepth = Math.max(0, Math.min(1, lfoDepth)); // Clamp 0-1
+                    lfo.amplitude.value = lfoDepth;
+                } else if (lfo) {
+                    lfo.amplitude.value = 0; // Ensure LFO depth is off if LFO target is off
+                }
+            }
+            ui.knobs.perform.addEventListener('input', applyEnvelopeRelease);
+            
+            function applyReverbMix() { if (reverb) reverb.wet.value = parseFloat(ui.knobs.fx.value) / 100; }
+            ui.knobs.fx.addEventListener('input', applyReverbMix);
+            
+            ui.knobs.keyTranspose.addEventListener('input', () => { currentKeyTranspose = parseInt(ui.knobs.keyTranspose.value); if (isPlaying) handlePlayTrigger(); else updateVisuals(); });
+            
+            function applySubOscVolume() { if (subOsc) { const volPercent = parseFloat(ui.knobs.bassVol.value); const effectiveRoot = getEffectiveRootMidi(); if (volPercent > 0 && effectiveRoot !== null) { const dbValue = Tone.gainToDb(volPercent / 100 * 0.5) -12; subOsc.volume.linearRampToValueAtTime(dbValue, Tone.now() + 0.05); const subFreq = Tone.Frequency(effectiveRoot - 12, "midi").toFrequency(); subOsc.frequency.setValueAtTime(subFreq, Tone.now()); } else { subOsc.volume.linearRampToValueAtTime(-Infinity, Tone.now() + 0.05); } } }
+            ui.knobs.bassVol.addEventListener('input', applySubOscVolume);
+            
+            function applyMasterGainSetting() { if (masterGain) { const volPercent = parseFloat(ui.knobs.volume.value); if (volPercent === 0) masterGain.gain.value = 0; else masterGain.gain.value = Math.pow(volPercent / 100, 2); } }
+            ui.knobs.volume.addEventListener('input', applyMasterGainSetting);
+            
+            function applyBPM() { if (audioInitialized) Tone.Transport.bpm.value = parseFloat(ui.knobs.bpm.value); }
+            ui.knobs.bpm.addEventListener('input', applyBPM);
+            
+            ui.knobs.loop.addEventListener('input', () => { if (currentRootNoteMidi !== null) { handlePlayTrigger(); } else updateVisuals(); });
+            
+            function applyLfoTargetAndSettings() { // Renamed from applyModulation
+                if (!lfo || !synth || !filter || !masterGain) return;
+                const lfoTarget = LFO_TARGETS[parseInt(ui.knobs.lfoTarget.value)];
+                
+                lfo.disconnect(); // Disconnect from all previous targets
+                if (synth.voices) synth.voices.forEach(voice => { if (voice.detune && voice.detune.isSignal) lfo.disconnect(voice.detune); });
+                if (filter.frequency && filter.frequency.isSignal) lfo.disconnect(filter.frequency);
+                if (masterGain.gain && masterGain.gain.isSignal) lfo.disconnect(masterGain.gain);
+
+                if (lfoTarget === 'off') {
+                    lfo.amplitude.value = 0; // Explicitly turn off LFO amplitude
+                    applyEnvelopeRelease(); // Ensure Perform knob only controls envelope release
+                    updateVoicingKnobLabel();
+                    return;
+                }
+
+                lfo.frequency.value = getLfoRateFromVoicingKnob(); // Set LFO rate
+                applyEnvelopeRelease(); // This will now also set LFO depth via Perform knob
+
+                switch (lfoTarget) {
+                    case 'pitch': // Vibrato
+                        lfo.min = -50; lfo.max = 50; // Cents
+                        if (synth.voices) synth.voices.forEach(voice => lfo.connect(voice.detune));
+                        break;
+                    case 'filterFreq': // Filter Sweep
+                        lfo.min = filter.frequency.minValue || 100;
+                        lfo.max = filter.frequency.maxValue / 2 || 5000; // Modulate up to half max freq for usability
+                        lfo.connect(filter.frequency);
+                        break;
+                    case 'amplitude': // Tremolo
+                        lfo.min = 0; lfo.max = 1; // Modulate gain from 0 to 1
+                        // The LFO output (0-1 from amplitude) will modulate the gain value.
+                        // We need to ensure the LFO is modulating the gain *relative* to the masterGain's current setting.
+                        // This is tricky. A simpler tremolo approach is to modulate a dedicated Gain node.
+                        // For now, connecting directly to masterGain.gain and expecting LFO amplitude to control depth.
+                        lfo.connect(masterGain.gain);
+                        break;
+                }
+                updateVoicingKnobLabel();
+            }
+            ui.knobs.lfoTarget.addEventListener('input', applyLfoTargetAndSettings);
+            
+            function getLfoRateFromVoicingKnob() {
+                const rateValue = parseInt(ui.knobs.voicing.value);
+                const lfoRates = [0.5, 2, 8]; // Hz: Slow, Medium, Fast
+                return lfoRates[Math.min(rateValue, lfoRates.length - 1)] || 2;
+            }
+            
+            function updateVoicingKnobLabel() {
+                const lfoTarget = LFO_TARGETS[parseInt(ui.knobs.lfoTarget.value)];
+                const labelEl = document.querySelector('.large-knob-control .large-knob-label');
+                if (labelEl) {
+                    labelEl.textContent = (lfoTarget !== 'off') ? "LFO Rate" : "Voicing";
+                }
+            }
+
+            ui.knobs.voicing.addEventListener('input', () => {
+                const lfoTarget = LFO_TARGETS[parseInt(ui.knobs.lfoTarget.value)];
+                if (lfoTarget !== 'off' && lfo) {
+                    lfo.frequency.value = getLfoRateFromVoicingKnob();
+                } else { 
+                    if (isPlaying) handlePlayTrigger(); else updateVisuals();
+                }
+            });
+
+            createVisualKeyboard(); createNoteVisualizer(); updateVisuals(); 
+            initializeAudioAndSynth();
+        });
+    </script>
+</body>
+</html>
